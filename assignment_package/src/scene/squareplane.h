@@ -1,11 +1,7 @@
 #pragma once
 
 #include "drawable.h"
-#include <la.h>
-
-#include <QOpenGLContext>
-#include <QOpenGLBuffer>
-#include <QOpenGLShaderProgram>
+#include <glm_includes.h>
 
 class SquarePlane : public Drawable
 {

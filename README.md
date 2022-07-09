@@ -1,7 +1,7 @@
-Physically-Based Shaders Part I: Point Lights
+Physically-Based Shaders Part II: Environment Maps
 ======================
 
-**University of Pennsylvania, CIS 561: Advanced Computer Graphics, Homework 7**
+**University of Pennsylvania, CIS 561: Advanced Computer Graphics, Homework 8**
 
 Yilin Liu
 
@@ -10,35 +10,35 @@ Yilin Liu
 
 ## Results
 
-### Figure 1
-<img src="results/figure1.png" width="70%">
+### Figure 1： 0% metallic, 0% rough, RBG = 1 1 1
+<img src="results/figure1.png" width="100%">
 
-### Figure 2
-<img src="results/figure2.png" width="70%">
+### Figure 2： 100% metallic, 0% rough, RGB = 1 1 1
+<img src="results/figure2.png" width="100%">
 
-### Figure 3
-<img src="results/figure3.png" width="70%">
+### Figure 3： 100% metallic, 25% rough, RGB = 1 1 1
+<img src="results/figure3.png" width="100%">
 
-### Figure 4
-<img src="results/figure4.png" width="70%">
+### Figure 4： cerberus.json
+<img src="results/cerberus.png" width="100%">
 
-### Figure 5
-<img src="results/figure5.png" width="70%">
-
-### Figure 6
-<img src="results/figure6.png" width="70%">
-
+### Figure 5： Normal Mapping
+<img src="results/figure4.png" width="100%">
 Overview
 ------------
-You will implement an OpenGL shader that computes an approximation of the Light Transport Integral. The material model you will use is a microfacet BSDF that can represent some value on the scale of of plasticness to metallicness, and some level of surface roughness. For this assignment, we will assume the only light sources in the scene are point lights, in order to greatly simplify our computations. Recall that the overall formula for this BSDF is <img src="https://render.githubusercontent.com/render/math?math=\color{grey}f(\omega_o, \omega_i) = k_D f_{Lambert}( \omega_o, \omega_i)"> + <img src="https://render.githubusercontent.com/render/math?math=\color{grey}k_S f_{Cook-Torrance}(\omega_o, \omega_i)">
+You will take what you learned in part I of this physically-based shader assignment and
+combine it with the pre-computation of irradiance applied to the plastic-metallic BRDF.
+Recall that the overall formula for this BSDF is <img src="https://render.githubusercontent.com/render/math?math=\color{grey}f(\omega_o, \omega_i) = k_D f_{Lambert}( \omega_o, \omega_i)"> + <img src="https://render.githubusercontent.com/render/math?math=\color{grey}k_S f_{Cook-Torrance}(\omega_o, \omega_i)">
 
 Here are some example screenshots of what your implementation should look like with varying amounts of roughness and metallicness:
 
-![](default.png)
+![](defaultAttribs.png)
 
-![](fullPlastic.png) ![](fullMetal.png)
+![](fullMetal0Rough.png) ![](fullMetal25Rough.png)
 
-![](lowRough.png) ![](highRough.png)
+![](fullMetal50Rough.png) ![](fullMetal75Rough.png)
+
+![](fullMetalFullRough.png)
 
 The Light Transport Equation
 --------------
@@ -63,50 +63,130 @@ choosing a point of origin in the scene rather than generating a ray and finding
 its intersection with the scene.
 * The __absolute-value dot product__ term accounts for Lambert's Law of Cosines.
 
+Downloading texture and scene files
+-----------------------------------
+In order to save space in your repository, we have uploaded a `.zip` file to Canvas
+containing the environment map `.hdr` files and `.json` scene files you can load into
+your program. Download this `.zip` and extract its contents into the same folder your `.pro`
+is in. We have also added a `.gitignore` that will ignore these folders when you push your
+code to Github. Make sure, then, that you explicitly `git add` any custom scene files you
+write as part of your extra credit.
+
 Updating this README (5 points)
 -------------
 Make sure that you fill out this `README.md` file with your name and PennKey,
 along with your example screenshots. For this assignment, you should take screenshots of your OpenGL window with the following configurations:
-- 0% metallic, 50% rough, RBG = 0 1 0
-- 100% metallic, 50% rough, RGB = 0.5 0.5 1
-- 50% metallic, 25% rough, RGB = 0.5 0 0
+- 0% metallic, 0% rough, RBG = 1 1 1
+- 100% metallic, 0% rough, RGB = 1 1 1
+- 100% metallic, 25% rough, RGB = 1 1 1
+- cerberus.json, with a camera angle that shows the model in profile
 
 Where to write code
 -----------------
-All code written for this point-light based PBR shader will be implemented in `pbr.frag.glsl`. When we move to environment map lighting next week, we will also write some C++ code.
+All code written for this point-light based PBR shader will be implemented in three different `.glsl` files:
+- `pbr.frag.glsl` (same name as last assignment, different code)
+- `diffuseConvolution.frag.glsl`
+- `glossyConvolution.frag.glsl`
 
-Point light intensity falloff (5 points)
+A useful resource
+-----------------
+While we are implementing the paper [Real Shading in Unreal 4](http://blog.selfshadow.com/publications/s2013-shading-course/karis/s2013_pbs_epic_notes_v2.pdf), you can find an excellent in-depth tutorial on its implementation on LearnOpenGL.org. For this assignment, you will want to refer to the following two articles:
+- [Diffuse irradiance with image-based lighting](https://learnopengl.com/PBR/IBL/Diffuse-irradiance)
+- [Specular image-based lighting](https://learnopengl.com/PBR/IBL/Specular-IBL)
+
+Shader variable terminology (10 points)
+----------------------------
+While you are encouraged to refer to the articles on LearnOpenGL.org linked above, we want to make sure
+that you are doing more than simply copying the code listed there. As such, you must assign specific names to variables that serve particular purposes, as the code linked above uses different names:
+- Name: `wo` | Purpose: The ray traveling from the point being shaded to the camera
+- Name: `wi` | Purpose: The ray traveling from the point being shaded to the source of irradiance
+- Name: `wh` | Purpose: The microfacet surface normal one would use to reflect `wo` in the direction of `wi`.
+- Name: `R` | Purpose: The innate material color used in the Fresnel reflectance function
+
+Please make sure to use this terminology in all three `.glsl` files where appropriate.
+
+Diffuse Irradiance precomputation (25 points)
 --------------
-The intensity of each point light's irradiance should be inversely proportional to the squared distance between that light and the point illuminated by it. We have provided the base radiance of each point light in the `light_col` array. You must take each of these values and attenuate them based on distance.
+Implement the `main` function of `diffuseConvolution.frag.glsl` so that it takes samples of
+`u_EnvironmentMap` across the set of directions within the hemisphere aligned with the input surface
+normal. Please carefully read the comments in this shader file in order to determine what the surface
+normal is in the context of this shader.
 
-Cook-Torrance BRDF (55 points)
+When you have implemented the diffuse irradiance map, you can view it as your scene's background by
+modifying the code in `MyGL::renderEnvironmentMap()`. Below are two examples of what you should see
+(excluding the appearance of the sphere, as you have not yet implemented the PBR shader).
+
+Default environment map:
+
+![](diffuseIrradianceAtelier.png)
+
+Fireplace environment map:
+
+![](diffuseIrradianceFireplace.png)
+
+
+Diffuse irradiance in the PBR shader (5 points)
 ----------
-The portion of this BSDF that deals with glossy reflection is the Cook-Torrance BRDF. Recall that this BRDF's formulation is
-<img src="https://render.githubusercontent.com/render/math?math=\color{grey}f_s(\omega_o, \omega_i) = \frac{DFG}{4(\omega_o \cdot n)(\omega_i \cdot n)}">. You must compute its value for each of the light sources in the provided scene (i.e. for each incoming light ray). Refer to the formulas provided in the PBR Shaders lecture slides for the D, F, and G terms.
+Now that you have your diffuse `Li` term, you can implement one portion of `pbr.frag.glsl`.
+Using the surface normal direction in the shader, sample the diffuse irradiance cubemap
+(`u_DiffuseIrradianceMap`) and combine it with your material's albedo. If you set this as your
+output color, and set your material properties to the ones shown below, you should be able to
+match these screenshots (also, don't forget to apply the Reinhard operator and gamma correction):
 
-Lambertian BRDF (20 points)
+Default environment map:
+
+![](diffuseMaterialAtelier.png)
+
+Fireplace environment map:
+
+![](diffuseMaterialFireplace.png)
+
+Fireplace environment map (viewed from another angle):
+
+![](diffuseMaterialFireplaceBack.png)
+
+Glossy Irradiance precomputation (30 points)
 ----------
-The portion of this BSDF that deals with diffuse reflection is the Lambertian BRDF. You must compute its value for each of the incoming light rays in the scene.
+Implement the `main` function of `glossyConvolution.frag.glsl` so that it takes samples of
+`u_EnvironmentMap` via importance sampling based on the GGX normal distribution function. Please carefully read the comments in this shader file in order to determine how you should orient the
+glossy BRDF lobe you'll be importance sampling.
 
-Diffuse and Glossy Coefficients (10 points)
+When you have implemented the glossy irradiance map, you can view it as your scene's background by
+modifying the code in `MyGL::renderEnvironmentMap()`, and uncommenting the invocation of `textureLod` in `envMap.frag.glsl`. Below are two examples of what you should see
+(excluding the appearance of the sphere, as you have not yet implemented the other portion of the PBR shader).
+
+Default environment map:
+
+![](glossyIrradianceAtelier.png)
+
+Panorama environment map:
+
+![](glossyIrradiancePanorama.png)
+
+Glossy irradiance in the PBR shader (15 points)
 ----------------
-You must attenuate the Cook-Torrance and Lambertian BSDF components such that they sum up to a value less than or equal to 1. This ensures that the BSDF is energy-conserving, and is thus physically correct.
+Now that you have your glossy `Li` term, you can implement the other portion of `pbr.frag.glsl`.
+You must compute the following attributes of your Cook-Torrance BRDF:
+- Fresnel term using the Schlick approximation
+- The combined D and G terms by sampling `u_BRDFLookupTexture` based on the `absdot` term and `roughness`.
 
-Recall that <img src="https://render.githubusercontent.com/render/math?math=\color{grey}k_S = F"> and that <img src="https://render.githubusercontent.com/render/math?math=\color{grey}k_D = (1 - Metallic) \times (1 - k_S)">.
+Then, use `wi` to sample `u_GlossyIrradianceMap` using `textureLod`, along with `roughness` to determine
+the mip level.
 
-Ambient light (5 points)
--------------
-We will introduce a small amount of ambient light (intensity = 0.03 * ambient occlusion * albedo). Make sure you factor this into your renders if you want to match the example renders.
+You must also compute `kD` based on your `kS` term, and multiply it with your diffuse component.
 
-Color space remapping and gamma correction (5 points)
-------------
-Since we will be working in HDR (linear) color space, you will need to remap your color back to sRGB values before outputting them. To do this, first apply the Reinhard operator to your Lo term, followed by gamma correction with an exponent of `(1 / 2.2)`.
+If you combine your diffuse and glossy colors into your output, and set your material properties to the ones shown below, you should be able to match the screenshots shown in the very beginning of these instructions.
 
-Extra credit (20 points maximum)
+Normal mapping and displacement mapping (10 points)
+------------------
+Modify `pbr.frag.glsl` and `pbr.vert.glsl` to do the following:
+- Alter `N` to align with the direction given by `u_NormalMap` when `u_UseNormalMap` is true
+- Alter `displacedPos` so that it is displaced along the surface normal by `u_DisplacementMagnitude` times a scalar obtained from `u_DisplacementMap` when `u_UseDisplacementMap` is true. 
+
+Extra credit (15 points maximum)
 -----------
-Implement 3D noise functions (e.g. the ones we discussed in CIS 460) in your shader that modify surface material attributes in order to provide more interesting variation across your surfaces. For example, you might make your surface look like rusted metal by applying "rust" patches with FBM, whose Metallicness is lower and whose Roughness is higher than the surrounding areas. This is just one example, there are all sorts of ways you could procedurally material your sphere.
-
-The more interesting your surface appearance, the more points you will receive. You can also implement multiple, simpler procedural materials to receive more credit.
+Create your own custom JSON scenes and load them into your project. Create texture maps for as many material attributes as you can for more interesting surface appearance. The more interesting and numerous your scenes are, the more points you'll receive. You'll also have created excellent material for your
+demo reel in the process!
 
 Submitting your project
 --------------

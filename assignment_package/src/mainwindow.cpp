@@ -17,6 +17,12 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->metallicSlider, SIGNAL(valueChanged(int)), ui->mygl, SLOT(slot_setMetallic(int)));
     connect(ui->roughnessSlider, SIGNAL(valueChanged(int)), ui->mygl, SLOT(slot_setRoughness(int)));
     connect(ui->aoSlider, SIGNAL(valueChanged(int)), ui->mygl, SLOT(slot_setAO(int)));
+    connect(ui->displacementSpinBox, SIGNAL(valueChanged(double)), ui->mygl, SLOT(slot_setDisplacement(double)));
+
+    connect(ui->envMapButton, SIGNAL(clicked()), ui->mygl, SLOT(slot_loadEnvMap()));
+    connect(ui->sceneButton, SIGNAL(clicked()), ui->mygl, SLOT(slot_loadScene()));
+    connect(ui->objButton, SIGNAL(clicked()), ui->mygl, SLOT(slot_loadOBJ()));
+    connect(ui->sphereButton, SIGNAL(clicked()), ui->mygl, SLOT(slot_revertToSphere()));
 }
 
 MainWindow::~MainWindow()

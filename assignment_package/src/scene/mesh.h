@@ -17,5 +17,6 @@ public:
     Mesh(OpenGLContext *context);
 
     void create() override;
+    void destroy() override;
     void LoadOBJ(const QString &filename, const QString &local_path);
 };

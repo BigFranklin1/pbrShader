@@ -4,7 +4,7 @@
 
 void MyGL::mousePressEvent(QMouseEvent *e)
 {
-    if(e->buttons() & (Qt::LeftButton | Qt::RightButton))
+    if(e->buttons() & (Qt::LeftButton | Qt::RightButton | Qt::MiddleButton))
     {
         m_mousePosPrev = glm::vec2(e->pos().x(), e->pos().y());
     }
@@ -25,6 +25,11 @@ void MyGL::mouseMoveEvent(QMouseEvent *e)
     }
     else if(e->buttons() & Qt::RightButton)
     {
+        glm::vec2 diff = 0.02f * (pos - m_mousePosPrev);
+        m_mousePosPrev = pos;
+        m_glCamera.Zoom(diff.y);
+    }
+    else if(e->buttons() & Qt::MiddleButton) {
         // Panning
         glm::vec2 diff = 0.05f * (pos - m_mousePosPrev);
         m_mousePosPrev = pos;
@@ -37,9 +42,9 @@ void MyGL::mouseMoveEvent(QMouseEvent *e)
 
 void MyGL::wheelEvent(QWheelEvent *e)
 {
-    m_glCamera.Zoom(e->angleDelta().y() * 0.02f);
-    m_glCamera.RecomputeAttributes();
-    update();
+//    m_glCamera.Zoom(e->angleDelta().y() * 0.02f);
+//    m_glCamera.RecomputeAttributes();
+//    update();
 }
 
 void MyGL::keyPressEvent(QKeyEvent *e)

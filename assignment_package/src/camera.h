@@ -1,6 +1,6 @@
 #pragma once
 
-#include <la.h>
+#include <glm_includes.h>
 
 //A perspective projection camera
 //Receives its eye position and reference point from the scene XML file
@@ -30,6 +30,7 @@ public:
               H;        //Represents the horizontal component of the plane of the viewing frustum that passes through the camera's reference point. Used in Camera::Raycast.
 
     glm::mat4 getViewProj();
+    glm::mat4 getViewProj_OrientOnly();
 
     void RecomputeAttributes();
 

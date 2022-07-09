@@ -1,2 +1,4 @@
-build-*
+assignment_package/environment_maps/*
+assignment_package/models/*
 *.pro.user
+build-*

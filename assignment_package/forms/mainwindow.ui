@@ -39,6 +39,9 @@
       <height>18</height>
      </rect>
     </property>
+    <property name="minimum">
+     <number>0</number>
+    </property>
     <property name="maximum">
      <number>100</number>
     </property>
@@ -84,6 +87,9 @@
       <height>18</height>
      </rect>
     </property>
+    <property name="minimum">
+     <number>0</number>
+    </property>
     <property name="maximum">
      <number>100</number>
     </property>
@@ -102,6 +108,9 @@
       <width>160</width>
       <height>18</height>
      </rect>
+    </property>
+    <property name="minimum">
+     <number>0</number>
     </property>
     <property name="maximum">
      <number>100</number>
@@ -229,6 +238,87 @@
      <string>Albedo</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="envMapButton">
+    <property name="geometry">
+     <rect>
+      <x>680</x>
+      <y>460</y>
+      <width>161</width>
+      <height>29</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Load Environment Map</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="sceneButton">
+    <property name="geometry">
+     <rect>
+      <x>650</x>
+      <y>500</y>
+      <width>91</width>
+      <height>29</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Load Scene</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="sphereButton">
+    <property name="geometry">
+     <rect>
+      <x>750</x>
+      <y>520</y>
+      <width>121</width>
+      <height>29</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Revert to Sphere</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_8">
+    <property name="geometry">
+     <rect>
+      <x>800</x>
+      <y>260</y>
+      <width>101</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Displacement</string>
+    </property>
+   </widget>
+   <widget class="QDoubleSpinBox" name="displacementSpinBox">
+    <property name="geometry">
+     <rect>
+      <x>820</x>
+      <y>290</y>
+      <width>67</width>
+      <height>29</height>
+     </rect>
+    </property>
+    <property name="singleStep">
+     <double>0.100000000000000</double>
+    </property>
+    <property name="value">
+     <double>0.200000000000000</double>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="objButton">
+    <property name="geometry">
+     <rect>
+      <x>650</x>
+      <y>540</y>
+      <width>91</width>
+      <height>29</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Load OBJ</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
@@ -274,6 +364,15 @@
    <class>MyGL</class>
    <extends>QOpenGLWidget</extends>
    <header>mygl.h</header>
+   <slots>
+    <signal>sig_ResizeToCamera(int,int)</signal>
+    <signal>sig_DisableGUI(bool)</signal>
+    <slot>slot_SceneDialog()</slot>
+    <slot>slot_SetNumSamplesSqrt(int)</slot>
+    <slot>slot_SetRecursionLimit(int)</slot>
+    <slot>slot_SetProgressiveRender(bool)</slot>
+    <slot>slot_SetIntegratorType(int)</slot>
+   </slots>
   </customwidget>
  </customwidgets>
  <resources/>

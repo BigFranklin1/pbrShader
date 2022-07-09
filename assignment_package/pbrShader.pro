@@ -22,7 +22,8 @@ FORMS += forms/mainwindow.ui \
     forms/cameracontrolshelp.ui
 
 RESOURCES += glsl.qrc \
-             obj.qrc
+             obj.qrc \
+             textures.qrc
 
 *-clang*|*-g++* {
     message("Enabling additional warnings")

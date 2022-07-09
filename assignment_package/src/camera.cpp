@@ -1,6 +1,6 @@
 #include "camera.h"
 
-#include <la.h>
+#include <glm_includes.h>
 #include <iostream>
 
 
@@ -60,9 +60,12 @@ void Camera::RecomputeAttributes()
     H = right*len*aspect*tan_fovy;
 }
 
-glm::mat4 Camera::getViewProj()
-{
+glm::mat4 Camera::getViewProj() {
     return glm::perspective(glm::radians(fovy), width / (float)height, near_clip, far_clip) * glm::lookAt(eye, ref, up);
+}
+
+glm::mat4 Camera::getViewProj_OrientOnly() {
+    return glm::perspective(glm::radians(fovy), width / (float)height, near_clip, far_clip) * glm::lookAt(glm::vec3(0,0,0), ref - eye, up);
 }
 
 void Camera::Reset()

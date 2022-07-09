@@ -7,7 +7,7 @@
 
 ShaderProgram::ShaderProgram(OpenGLContext *context)
     : vertShader(), fragShader(), prog(),
-      attrPos(-1), attrNor(-1), attrCol(-1),
+      attrPos(-1), attrNor(-1), attrTan(-1), attrBit(-1), attrUV(-1),
       unifModel(-1), unifModelInvTr(-1), unifViewProj(-1), unifCamPos(-1),
       unifAlbedo(-1), unifMetallic(-1), unifRoughness(-1), unifAO(-1),
       context(context)
@@ -63,115 +63,63 @@ void ShaderProgram::create(const char *vertfile, const char *fragfile)
 
     attrPos = context->glGetAttribLocation(prog, "vs_Pos");
     attrNor = context->glGetAttribLocation(prog, "vs_Nor");
-    attrCol = context->glGetAttribLocation(prog, "vs_Col");
-
-    unifModel      = context->glGetUniformLocation(prog, "u_Model");
-    unifModelInvTr = context->glGetUniformLocation(prog, "u_ModelInvTr");
-    unifViewProj   = context->glGetUniformLocation(prog, "u_ViewProj");
-    unifCamPos     = context->glGetUniformLocation(prog, "u_CamPos");
-    unifAlbedo     = context->glGetUniformLocation(prog, "u_Albedo");
-    unifMetallic   = context->glGetUniformLocation(prog, "u_Metallic");
-    unifRoughness  = context->glGetUniformLocation(prog, "u_Roughness");
-    unifAO         = context->glGetUniformLocation(prog, "u_AmbientOcclusion");
+    attrTan = context->glGetAttribLocation(prog, "vs_Tan");
+    attrBit = context->glGetAttribLocation(prog, "vs_Bit");
+    attrUV = context->glGetAttribLocation(prog, "vs_UV");
 }
 
-void ShaderProgram::useMe()
-{
+void ShaderProgram::useMe() {
     context->glUseProgram(prog);
 }
 
-void ShaderProgram::setModelMatrix(const glm::mat4 &model)
-{
+void ShaderProgram::setUnifMat4(std::string name, const glm::mat4 &m) {
     useMe();
-
-    if (unifModel != -1) {
-        // Pass a 4x4 matrix into a uniform variable in our shader
-                        // Handle to the matrix variable on the GPU
-        context->glUniformMatrix4fv(unifModel,
-                        // How many matrices to pass
-                           1,
-                        // Transpose the matrix? OpenGL uses column-major, so no.
-                           GL_FALSE,
-                        // Pointer to the first element of the matrix
-                           &model[0][0]);
+    try {
+        int handle = m_unifs.at(name);
+        if(handle != -1) {
+            context->glUniformMatrix4fv(handle, 1, GL_FALSE, &m[0][0]);
+        }
     }
-
-    if (unifModelInvTr != -1) {
-        glm::mat4 modelinvtr = glm::inverse(glm::transpose(model));
-        // Pass a 4x4 matrix into a uniform variable in our shader
-                        // Handle to the matrix variable on the GPU
-        context->glUniformMatrix4fv(unifModelInvTr,
-                        // How many matrices to pass
-                           1,
-                        // Transpose the matrix? OpenGL uses column-major, so no.
-                           GL_FALSE,
-                        // Pointer to the first element of the matrix
-                           &modelinvtr[0][0]);
+    catch(std::out_of_range &e) {
+        std::cout << "Error: could not find shader variable with name " << name << std::endl;
     }
 }
-
-void ShaderProgram::setViewProjMatrix(const glm::mat4 &vp)
-{
-    // Tell OpenGL to use this shader program for subsequent function calls
+void ShaderProgram::setUnifVec3(std::string name, const glm::vec3 &v) {
     useMe();
-
-    if(unifViewProj != -1) {
-    // Pass a 4x4 matrix into a uniform variable in our shader
-                    // Handle to the matrix variable on the GPU
-    context->glUniformMatrix4fv(unifViewProj,
-                    // How many matrices to pass
-                       1,
-                    // Transpose the matrix? OpenGL uses column-major, so no.
-                       GL_FALSE,
-                    // Pointer to the first element of the matrix
-                       &vp[0][0]);
+    try {
+        int handle = m_unifs.at(name);
+        if(handle != -1) {
+            context->glUniform3fv(handle, 1, &v[0]);
+        }
+    }
+    catch(std::out_of_range &e) {
+        std::cout << "Error: could not find shader variable with name " << name << std::endl;
     }
 }
-
-void ShaderProgram::setCamPos(glm::vec3 pos)
-{
+void ShaderProgram::setUnifFloat(std::string name, float f) {
     useMe();
-
-    if(unifCamPos != -1)
-    {
-        context->glUniform3fv(unifCamPos, 1, &pos[0]);
+    try {
+        int handle = m_unifs.at(name);
+        if(handle != -1) {
+            context->glUniform1f(handle, f);
+        }
+    }
+    catch(std::out_of_range &e) {
+        std::cout << "Error: could not find shader variable with name " << name << std::endl;
     }
 }
-
-
-void ShaderProgram::setAlbedo(glm::vec3 albedo) {
+void ShaderProgram::setUnifInt(std::string name, int i) {
     useMe();
-
-    if(unifAlbedo != -1)
-    {
-        context->glUniform3fv(unifAlbedo, 1, &albedo[0]);
+    try {
+        int handle = m_unifs.at(name);
+        if(handle != -1) {
+            context->glUniform1i(handle, i);
+        }
+    }
+    catch(std::out_of_range &e) {
+        std::cout << "Error: could not find shader variable with name " << name << std::endl;
     }
 }
-void ShaderProgram::setMetallic(float m) {
-    useMe();
-
-    if(unifMetallic != -1)
-    {
-        context->glUniform1f(unifMetallic, m);
-    }
-}
-void ShaderProgram::setRoughness(float r) {
-    useMe();
-
-    if(unifRoughness != -1)
-    {
-        context->glUniform1f(unifRoughness, r);
-    }
-}
-void ShaderProgram::setAO(float ao) {
-    useMe();
-
-    if(unifAO != -1)
-    {
-        context->glUniform1f(unifAO, ao);
-    }
-}
-
 //This function, as its name implies, uses the passed in GL widget
 void ShaderProgram::draw(Drawable &d)
 {
@@ -182,35 +130,47 @@ void ShaderProgram::draw(Drawable &d)
     }
     useMe();
 
-    if (attrPos != -1 && d.bindPos()) {
+    if (attrPos != -1 && d.bindBuffer(POS)) {
         context->glEnableVertexAttribArray(attrPos);
         context->glVertexAttribPointer(attrPos, 3, GL_FLOAT, false, 0, nullptr);
     }
 
-    if (attrNor != -1 && d.bindNor()) {
+    if (attrNor != -1 && d.bindBuffer(NOR)) {
         context->glEnableVertexAttribArray(attrNor);
         context->glVertexAttribPointer(attrNor, 3, GL_FLOAT, false, 0, nullptr);
     }
 
-    if (attrCol != -1 && d.bindCol()) {
-        context->glEnableVertexAttribArray(attrCol);
-        context->glVertexAttribPointer(attrCol, 3, GL_FLOAT, false, 0, nullptr);
+    if (attrTan != -1 && d.bindBuffer(TAN)) {
+        context->glEnableVertexAttribArray(attrTan);
+        context->glVertexAttribPointer(attrTan, 3, GL_FLOAT, false, 0, nullptr);
+    }
+
+    if (attrBit != -1 && d.bindBuffer(BIT)) {
+        context->glEnableVertexAttribArray(attrBit);
+        context->glVertexAttribPointer(attrBit, 3, GL_FLOAT, false, 0, nullptr);
+    }
+
+    if (attrUV != -1 && d.bindBuffer(UV)) {
+        context->glEnableVertexAttribArray(attrUV);
+        context->glVertexAttribPointer(attrUV, 2, GL_FLOAT, false, 0, nullptr);
     }
 
     // Bind the index buffer and then draw shapes from it.
     // This invokes the shader program, which accesses the vertex buffers.
-    d.bindIdx();
+    d.bindBuffer(IDX);
     context->glDrawElements(d.drawMode(), d.elemCount(), GL_UNSIGNED_INT, 0);
 
     if (attrPos != -1) context->glDisableVertexAttribArray(attrPos);
     if (attrNor != -1) context->glDisableVertexAttribArray(attrNor);
-    if (attrCol != -1) context->glDisableVertexAttribArray(attrCol);
+    if (attrTan != -1) context->glDisableVertexAttribArray(attrTan);
+    if (attrBit != -1) context->glDisableVertexAttribArray(attrBit);
+    if (attrUV != -1) context->glDisableVertexAttribArray(attrUV);
 
     context->printGLErrorLog();
 }
 
 char* ShaderProgram::textFileRead(const char* fileName) {
-    char* text;
+    char* text = nullptr;
 
     if (fileName != NULL) {
         FILE *file = fopen(fileName, "rt");
